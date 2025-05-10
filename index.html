@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Static Stremio Addon</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #1a1a1a;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #ff5722;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+        button:hover {
+            background-color: #e64a19;
+        }
+        code {
+            display: block;
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+        }
+        .instructions {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>My Video Collection</h1>
+        <p>Access your personal video collection with customizable formats and subtitles</p>
+    </header>
+    
+    <div class="container">
+        <h2>Install Addon</h2>
+        <p>Click the button below to install this addon to your Stremio:</p>
+        <button id="installButton">Install Addon</button>
+        
+        <div id="manifest"></div>
+        
+        <div class="instructions">
+            <h2>How to Use</h2>
+            <ol>
+                <li>Edit the videoData array in the script section to add your videos</li>
+                <li>For each video, provide title, ID, and video URL</li>
+                <li>Add subtitle URLs when available</li>
+                <li>Assign videos to playlists using the playlistIds property</li>
+                <li>Host this HTML file on GitHub Pages or any static file hosting service</li>
+                <li>Access the URL and click "Install Addon" to add it to Stremio</li>
+            </ol>
+            
+            <h3>How to Add a New Playlist</h3>
+            <ol>
+                <li>Open this HTML file in a text editor</li>
+                <li>Find the "playlists" array in the script section</li>
+                <li>Add a new playlist object with a unique ID and name:</li>
+                <code>
+{
+    name: "My New Playlist",
+    id: "new_playlist_id"
+}
+                </code>
+                <li>Update your videos to include this playlist ID:</li>
+                <code>
+playlistIds: ["existing_playlist", "new_playlist_id"]
+                </code>
+                <li>Save the file and re-upload it to your hosting service</li>
+                <li>Reinstall the addon in Stremio to see your changes</li>
+            </ol>
+            
+            <h3>Example Video Data Format:</h3>
+            <code>
+{
+    title: "Example Movie",
+    id: "movie1",  // Unique identifier for this video
+    videoURL: "https://example.com/video.mp4",
+    subtitleURL: "https://example.com/subtitle.vtt", // Optional
+    playlistIds: ["action_playlist", "favorites"] // List of playlists this video belongs to
+}
+            </code>
+            
+            <h3>Example Playlist Format:</h3>
+            <code>
+{
+    name: "Action Movies",
+    id: "action_playlist"
+}
+            </code>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Static Stremio Addon - No hosting required</p>
+    </footer>
+
+    <script>
+        // EDIT THIS SECTION WITH YOUR VIDEOS AND PLAYLISTS
+        const playlists = [
+            {
+                name: "Action Movies",
+                id: "action_playlist"
+            },
+            {
+                name: "Comedy Shows",
+                id: "comedy_playlist"
+            },
+            // Add more playlists as needed
+        ];
+
+        const videoData = [
+            {
+                title: "Big Buck Bunny",
+                id: "big_buck_bunny",
+                videoURL: "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_1MB.mp4",
+                subtitleURL: "https://raw.githubusercontent.com/andreyvit/subtitle-tools/master/sample.srt",
+                playlistIds: ["action_playlist"] // This video belongs to "Action Movies" playlist
+            },
+            {
+                title: "Sintel",
+                id: "sintel",
+                videoURL: "https://test-videos.co.uk/vids/sintel/mp4/h264/1080/Sintel_1080_10s_1MB.mp4",
+                playlistIds: ["action_playlist", "comedy_playlist"] // This video belongs to both playlists
+                // No subtitles for this video
+            },
+            // Add more videos here
+        ];
+
+        // Addon metadata
+        const manifest = {
+            id: "org.yourdomain.staticaddon",
+            version: "1.0.0",
+            name: "My Video Collection",
+            description: "Personal collection of videos with optional subtitles",
+            resources: ["stream", "catalog"],
+            types: ["movie"],
+            catalogs: [
+                {
+                    type: "movie",
+                    id: "my_collection",
+                    name: "My Collection", // This is your main collection name - appears in Stremio
+                    extra: [{ name: "skip" }]
+                },
+                ...playlists.map(playlist => ({
+                    type: "movie",
+                    id: playlist.id,
+                    name: playlist.name,
+                    extra: [{ name: "skip" }]
+                }))
+            ]
+        };
+
+        // Generate metadata response
+        function getManifest() {
+            return manifest;
+        }
+
+        // Generate catalog response
+        function getCatalog(catalogId) {
+            // If no catalog ID or it's "my_collection", return all videos
+            if (!catalogId || catalogId === "my_collection") {
+                return {
+                    metas: videoData.map(video => {
+                        return {
+                            id: video.id,
+                            type: "movie",
+                            name: video.title
+                        };
+                    })
+                };
+            }
+            
+            // Otherwise, filter videos by the requested playlist
+            const playlistVideos = videoData.filter(video => 
+                video.playlistIds && video.playlistIds.includes(catalogId)
+            );
+            
+            return {
+                metas: playlistVideos.map(video => {
+                    return {
+                        id: video.id,
+                        type: "movie",
+                        name: video.title
+                    };
+                })
+            };
+        }
+
+        // Generate stream response
+        function getStreams(id) {
+            const video = videoData.find(v => v.id === id);
+            if (!video) return { streams: [] };
+            
+            const stream = {
+                title: video.title,
+                url: video.videoURL
+            };
+            
+            // Add subtitles if available
+            if (video.subtitleURL) {
+                stream.subtitles = [
+                    {
+                        url: video.subtitleURL,
+                        lang: "en"
+                    }
+                ];
+            }
+            
+            return {
+                streams: [stream]
+            };
+        }
+
+        // Handle API requests
+        function handleRequest(request) {
+            const { method, type, id, catalogId } = request;
+            
+            if (method === "manifest") {
+                return getManifest();
+            }
+            
+            if (method === "catalog") {
+                return getCatalog(catalogId);
+            }
+            
+            if (method === "stream") {
+                return getStreams(id);
+            }
+            
+            return { error: "Not implemented" };
+        }
+
+        // Create the addon URL
+        function createAddonUrl() {
+            const addonUrl = window.location.href;
+            return `stremio://${encodeURIComponent(addonUrl)}`;
+        }
+
+        // Display manifest data
+        document.getElementById("manifest").innerHTML = `
+            <h3>Addon Information:</h3>
+            <code>${JSON.stringify(manifest, null, 2)}</code>
+        `;
+
+        // Handle install button
+        document.getElementById("installButton").addEventListener("click", function() {
+            window.location.href = createAddonUrl();
+        });
+
+        // Request handling for Stremio
+        window.addEventListener("message", function(event) {
+            if (typeof event.data === "object" && event.data) {
+                const { request, stremioAPIPort } = event.data;
+                
+                if (request && stremioAPIPort) {
+                    const response = handleRequest(request);
+                    event.source.postMessage({ response, stremioAPIPort }, "*");
+                }
+            }
+        });
+
+        // Handle direct API requests via URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has("method")) {
+            const method = urlParams.get("method");
+            const type = urlParams.get("type");
+            const id = urlParams.get("id");
+            
+            const response = handleRequest({ method, type, id });
+            document.body.innerHTML = `<pre>${JSON.stringify(response, null, 2)}</pre>`;
+        }
+    </script>
+</body>
+</html>
